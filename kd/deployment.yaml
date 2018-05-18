@@ -19,6 +19,7 @@ spec:
     metadata:
       labels:
         name: hocs-workflow
+        role: hocs-backend
         version: {{.VERSION}}
     spec:
       imagePullSecrets:
