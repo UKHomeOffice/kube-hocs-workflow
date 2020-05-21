@@ -8,16 +8,25 @@ if [[ -z ${VERSION} ]] ; then
 fi
 
 if [[ ${ENVIRONMENT} == "prod" ]] ; then
-    echo "deploy ${VERSION} to prod namespace, using HOCS_WORKFLOW_PR drone secret"
+    echo "deploy ${VERSION} to PROD namespace, using HOCS_WORKFLOW_PR drone secret"
     export KUBE_TOKEN=${HOCS_WORKFLOW_PROD}
+    export REPLICAS="2"
 else
     if [[ ${ENVIRONMENT} == "qa" ]] ; then
-        echo "deploying ${VERSION} to test namespace, using HOCS_WORKFLOW_QA drone secret"
+        echo "deploying ${VERSION} to QA namespace, using HOCS_WORKFLOW_QA drone secret"
         export KUBE_TOKEN=${HOCS_WORKFLOW_QA}
-    else
-        echo "deploy ${VERSION} to dev namespace, using HOCS_WORKFLOW_DEV drone secret"
+        export REPLICAS="2"
+    elif [[ ${ENVIRONMENT} == "demo" ]] ; then
+        echo "deploy ${VERSION} to DEMO namespace, using HOCS_WORKFLOW_DEMO drone secret"
+        export KUBE_TOKEN=${HOCS_WORKFLOW_DEMO}
+        export REPLICAS="1"
+    elif [[ ${ENVIRONMENT} == "dev" ]] ; then
+        echo "deploy ${VERSION} to DEV namespace, using HOCS_WORKFLOW_DEV drone secret"
         export KUBE_TOKEN=${HOCS_WORKFLOW_DEV}
-    fi
+        export REPLICAS="1"
+    else
+        echo "Unable to find environment: ${ENVIRONMENT}"
+    fi    
 fi
 
 if [[ -z ${KUBE_TOKEN} ]] ; then
@@ -28,6 +37,7 @@ fi
 cd kd
 
 kd --insecure-skip-tls-verify \
-   --timeout 10m \
+   --timeout 15m \
     -f deployment.yaml \
-    -f service.yaml
+    -f service.yaml \
+    -f autoscale.yaml
